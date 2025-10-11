@@ -1,6 +1,6 @@
 "use client";
 
-import Map, { Marker, Popup, MapRef, MapLayerMouseEvent, Source, Layer } from "react-map-gl";
+import Map, { Marker, Popup, MapRef, MapLayerMouseEvent, Source, Layer, NavigationControl } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -140,8 +140,6 @@ export default function MapboxMap({ sightings, onMapClick }: Props) {
     onMapClick(lngLat.lat, lngLat.lng);
   };
 
-  // Rely on maxBounds instead of manual onMove corrections to avoid recursion
-
   // Fallbacks for missing token or unsupported WebGL
   if (!token) {
     return <div className="w-full h-full flex items-center justify-center text-sm text-gray-600">Mapbox token missing. Add NEXT_PUBLIC_MAPBOX_TOKEN to .env.local and restart.</div>;
@@ -162,7 +160,7 @@ export default function MapboxMap({ sightings, onMapClick }: Props) {
       // load the mapbox-gl library lazily to avoid bundler/SSR issues
       mapLib={import("mapbox-gl") as MapLib}
       initialViewState={{ longitude: -73.935242, latitude: 40.7128, zoom: 11 }}
-      minZoom={10}
+      minZoom={8}
       maxZoom={18}
       style={{ width: "100%", height: "100%" }}
       mapStyle="mapbox://styles/mapbox/dark-v11"
@@ -180,6 +178,10 @@ export default function MapboxMap({ sightings, onMapClick }: Props) {
       </Source>
       {/* Optional NYC outline */}
       <Layer id="nyc-outline" type="line" source="nyc-mask" paint={{ "line-color": "#a855f7", "line-width": 2 }} />
+
+      {/* Built-in navigation control (zoom) */}
+      <NavigationControl position="top-right" showCompass={false} />
+
       {markers}
     </Map>
   );
