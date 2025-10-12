@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const navItems = [
-  { name: "Map", href: "/#map" },
+  { name: "Map", href: "/map" },
   { name: "Sightings", href: "/#sightings" },
   { name: "About", href: "/#about" },
   { name: "Stats", href: "/#stats" },

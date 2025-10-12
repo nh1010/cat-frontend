@@ -17,7 +17,7 @@ export default function Home() {
               <span className="block">EVERY CORNER.</span>
             </h1>
             <p className="text-lg text-lilac-700 max-w-md">
-              Track sightings and volunteers city‑wide, now with a soft pastel palette. Every corner of NYC — gentle, warm, and connected.
+              A data-driven passion project dedicated to helping every stray find safety, care, and love — giving a voice and a map to the cats that call New York home.
             </p>
             <div className="flex items-center gap-4">
               <Link href="#map" className="inline-flex items-center gap-2 rounded-full bg-lilac-800 text-cream-50 px-5 py-2.5 text-sm font-semibold hover:bg-lilac-700">
