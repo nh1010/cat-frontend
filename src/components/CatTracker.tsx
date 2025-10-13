@@ -8,7 +8,7 @@ import MapboxMap from "@/components/MapboxMap";
 
 // Remove Leaflet in favor of Mapbox GL
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 // Mapbox is used; no Leaflet icon setup required
 

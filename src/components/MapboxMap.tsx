@@ -15,6 +15,7 @@ export interface MBFeature {
 interface Props {
   sightings: MBFeature[];
   onMapClick: (lat: number, lng: number) => void;
+  flyTo?: { lat: number; lng: number } | null;
 }
 
 const NYC_BOUNDS: [number, number, number, number] = [-74.25909, 40.477399, -73.700272, 40.917577];
@@ -51,13 +52,13 @@ const DEFAULT_MASK_GEOJSON: GeoJSON.FeatureCollection = {
   ]
 };
 
-export default function MapboxMap({ sightings, onMapClick }: Props) {
+export default function MapboxMap({ sightings, onMapClick, flyTo }: Props) {
   const mapRef = useRef<MapRef | null>(null);
   const [glSupported, setGlSupported] = useState<boolean | null>(null);
   const [popupId, setPopupId] = useState<number | null>(null);
   const [maskData, setMaskData] = useState<GeoJSON.FeatureCollection>(DEFAULT_MASK_GEOJSON);
 
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+  const token = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
   // Detect WebGL support and load mapbox-gl on client only
   useEffect(() => {
@@ -135,6 +136,14 @@ export default function MapboxMap({ sightings, onMapClick }: Props) {
     </Marker>
   )), [sightings, popupId]);
 
+  // Respond to flyTo prop changes
+  useEffect(() => {
+    if (!flyTo) return;
+    const m = mapRef.current?.getMap();
+    if (!m) return;
+    m.flyTo({ center: [flyTo.lng, flyTo.lat], zoom: Math.max(m.getZoom(), 15), essential: true });
+  }, [flyTo]);
+
   const handleClick = (e: MapLayerMouseEvent) => {
     const { lngLat } = e;
     onMapClick(lngLat.lat, lngLat.lng);
@@ -142,7 +151,7 @@ export default function MapboxMap({ sightings, onMapClick }: Props) {
 
   // Fallbacks for missing token or unsupported WebGL
   if (!token) {
-    return <div className="w-full h-full flex items-center justify-center text-sm text-gray-600">Mapbox token missing. Add NEXT_PUBLIC_MAPBOX_TOKEN to .env.local and restart.</div>;
+    return <div className="w-full h-full flex items-center justify-center text-sm text-gray-600">Mapbox token missing. Add VITE_MAPBOX_TOKEN to .env and restart.</div>;
   }
   if (glSupported === false) {
     return <div className="w-full h-full flex items-center justify-center text-sm text-gray-600">WebGL is not available in this browser. Enable hardware acceleration and try again.</div>;
