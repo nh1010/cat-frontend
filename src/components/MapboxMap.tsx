@@ -9,7 +9,7 @@ export interface MBFeature {
   lat: number;
   lng: number;
   description: string;
-  reported_at: string;
+  created_at: string; // from backend
 }
 
 interface Props {
@@ -124,12 +124,24 @@ export default function MapboxMap({ sightings, onMapClick, flyTo }: Props) {
 
   const markers = useMemo(() => sightings.map((s) => (
     <Marker key={s.id} longitude={s.lng} latitude={s.lat} anchor="bottom">
-      <div onClick={() => setPopupId(s.id)} className="h-4 w-4 rounded-full bg-blue-600 border-2 border-white shadow cursor-pointer" />
+      <button
+        type="button"
+        onClick={() => setPopupId(s.id)}
+        className="flex flex-col items-center -translate-y-1 hover:-translate-y-2 transition-transform cursor-pointer focus:outline-none"
+        aria-label={s.description || "Cat sighting"}
+      >
+        <img
+          src="/nyc-cat-logo.png"
+          alt="Cat marker"
+          className="h-8 w-8 rounded-full ring-2 ring-white shadow-lg"
+        />
+        <div className="w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-pink-500 -mt-1" />
+      </button>
       {popupId === s.id && (
         <Popup longitude={s.lng} latitude={s.lat} onClose={() => setPopupId(null)} closeOnClick={false}>
           <div className="text-sm">
             <div className="font-semibold mb-1">{s.description}</div>
-            <div className="text-xs text-gray-600">{new Date(s.reported_at).toLocaleString()}</div>
+            <div className="text-xs text-gray-600">{new Date(s.created_at).toLocaleString()}</div>
           </div>
         </Popup>
       )}

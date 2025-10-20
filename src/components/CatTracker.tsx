@@ -8,7 +8,7 @@ import MapboxMap from "@/components/MapboxMap";
 
 // Remove Leaflet in favor of Mapbox GL
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
 
 // Mapbox is used; no Leaflet icon setup required
 
@@ -17,7 +17,7 @@ interface CatSighting {
   lat: number;
   lng: number;
   description: string;
-  reported_at: string;
+  created_at: string;
 }
 
 interface NewSighting {
@@ -75,8 +75,8 @@ export default function CatTracker() {
       setError("Failed to load cat sightings. Make sure the backend is running.");
       // Use placeholder data if backend is not available
       const placeholderData = [
-        { id: 1, lat: 40.7128, lng: -74.006, description: "Black cat near Central Park", reported_at: new Date().toISOString() },
-        { id: 2, lat: 40.73061, lng: -73.935242, description: "Orange tabby spotted on a rooftop", reported_at: new Date().toISOString() },
+        { id: 1, lat: 40.7128, lng: -74.006, description: "Black cat near Central Park", created_at: new Date().toISOString() },
+        { id: 2, lat: 40.73061, lng: -73.935242, description: "Orange tabby spotted on a rooftop", created_at: new Date().toISOString() },
       ];
       setCatSightings(placeholderData);
       setFilteredSightings(placeholderData);
