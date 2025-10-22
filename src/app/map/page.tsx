@@ -14,6 +14,8 @@ export default function MapPage() {
   const [spottedTime, setSpottedTime] = useState<string>("");
   const [addr, setAddr] = useState("");
 
+  console.log("Map page state - catName:", catName);
+
   const canSubmit = useMemo(() => !!pending && desc.trim().length > 0, [pending, desc]);
 
   const geocode = useCallback(async () => {
@@ -51,10 +53,23 @@ export default function MapPage() {
       spotted_at = new Date(`${spottedDate}T${t}`).toISOString();
     }
 
+    const body = {
+      lat: pending.lat,
+      lng: pending.lng,
+      description: desc || null,
+      address: addr || null,
+      source: "map",
+      cat_name: catName.trim() || null,
+      image_url: image_url ?? null,
+      spotted_at,
+    };
+    console.log("Submitting sighting payload:", body);
+    console.log("State before submit - catName:", catName);
+
     await fetch("http://localhost:5050/api/cats", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat: pending.lat, lng: pending.lng, description: desc, address: addr || undefined, source: "map", cat_name: catName || undefined, image_url, spotted_at }),
+      body: JSON.stringify(body),
     });
     setPending(null);
     setDesc("");
@@ -62,7 +77,7 @@ export default function MapPage() {
     setImageFile(null);
     setSpottedDate("");
     setSpottedTime("");
-  }, [pending, desc, addr]);
+  }, [pending, desc, addr, catName, imageFile, spottedDate, spottedTime]);
 
   return (
     <main className="bg-cream-100">
@@ -92,7 +107,14 @@ export default function MapPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-lilac-700 mb-1">Cat name (optional)</label>
-              <input value={catName} onChange={(e) => setCatName(e.target.value)} className="w-full rounded-md border border-lilac-300 px-3 py-2 bg-white text-lilac-900" />
+              <input 
+                value={catName} 
+                onChange={(e) => {
+                  console.log("Cat name input changed to:", e.target.value);
+                  setCatName(e.target.value);
+                }} 
+                className="w-full rounded-md border border-lilac-300 px-3 py-2 bg-white text-lilac-900" 
+              />
             </div>
             <div>
               <label className="block text-xs text-lilac-700 mb-1">Photo (optional)</label>

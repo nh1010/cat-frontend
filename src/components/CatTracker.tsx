@@ -24,6 +24,8 @@ interface NewSighting {
   lat: string;
   lng: string;
   description: string;
+  cat_name: string;
+  spottedAt?: string; // ISO string from datetime-local input
 }
 
 // No Leaflet hooks; clicks handled inside MapboxMap
@@ -32,7 +34,7 @@ export default function CatTracker() {
   const [catSightings, setCatSightings] = useState<CatSighting[]>([]);
   const [filteredSightings, setFilteredSightings] = useState<CatSighting[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newSighting, setNewSighting] = useState<NewSighting>({ lat: "", lng: "", description: "" });
+  const [newSighting, setNewSighting] = useState<NewSighting>({ lat: "", lng: "", description: "", cat_name: "", spottedAt: "" });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBorough] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -84,12 +86,12 @@ export default function CatTracker() {
   };
 
   const handleMapClick = (lat: number, lng: number) => {
-    setNewSighting({ lat: lat.toFixed(6), lng: lng.toFixed(6), description: "" });
+    setNewSighting({ lat: lat.toFixed(6), lng: lng.toFixed(6), description: "", cat_name: "", spottedAt: "" });
     setIsModalOpen(true);
   };
 
   const handleManualReport = () => {
-    setNewSighting({ lat: "", lng: "", description: "" });
+    setNewSighting({ lat: "", lng: "", description: "", cat_name: "", spottedAt: "" });
     setIsModalOpen(true);
   };
 
@@ -100,14 +102,22 @@ export default function CatTracker() {
     }
 
     try {
+      const payload = {
+        lat: parseFloat(newSighting.lat),
+        lng: parseFloat(newSighting.lng),
+        description: newSighting.description || null,
+        address: null as string | null,
+        source: "map" as string | null,
+        cat_name: newSighting.cat_name.trim() || null,
+        image_url: null as string | null,
+        spotted_at: newSighting.spottedAt || null,
+      };
+
+      console.log("Submitting sighting payload (CatTracker):", payload);
       const response = await fetch(`${API_BASE_URL}/api/cats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lat: parseFloat(newSighting.lat),
-          lng: parseFloat(newSighting.lng),
-          description: newSighting.description,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -117,7 +127,7 @@ export default function CatTracker() {
       const data = await response.json();
       setCatSightings([data, ...catSightings]);
       setIsModalOpen(false);
-      setNewSighting({ lat: "", lng: "", description: "" });
+      setNewSighting({ lat: "", lng: "", description: "", cat_name: "", spottedAt: "" });
     } catch (err) {
       console.error("Error submitting sighting:", err);
       alert("Failed to submit sighting. Please try again.");
@@ -228,6 +238,35 @@ export default function CatTracker() {
               value={newSighting.description}
               onChange={(e) => setNewSighting({ ...newSighting, description: e.target.value })}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cat name (optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., Miss Matcha"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={newSighting.cat_name}
+              onChange={(e) => {
+                console.log("Cat name input changed to:", e.target.value);
+                setNewSighting({ ...newSighting, cat_name: e.target.value });
+              }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Spotted at (optional)
+            </label>
+            <input
+              type="datetime-local"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={newSighting.spottedAt || ""}
+              onChange={(e) => setNewSighting({ ...newSighting, spottedAt: e.target.value })}
+            />
+            <p className="text-xs text-gray-500 mt-1">Leave blank to use now.</p>
           </div>
 
           <div className="flex gap-2 pt-2">

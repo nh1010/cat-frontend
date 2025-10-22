@@ -49,7 +49,7 @@ export default function BoroughOutlineMap() {
         <div className="w-full h-56 rounded-lg overflow-hidden">
           <Map
             ref={mapRef}
-            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+            mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
             initialViewState={{ longitude: -73.935242, latitude: 40.7128, zoom: 10 }}
             interactive={false}
             attributionControl={false}
