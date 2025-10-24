@@ -1,15 +1,45 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import MapboxMap from "@/components/MapboxMap";
+import RecentCatsCarousel from "@/components/RecentCatsCarousel";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
+
+interface CatSighting {
+  id: number;
+  lat: number;
+  lng: number;
+  description: string;
+  created_at: string;
+}
 
 export default function Home() {
+  const [sightings, setSightings] = useState<CatSighting[]>([]);
+
+  useEffect(() => {
+    const fetchSightings = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/cats`);
+        if (response.ok) {
+          const data = await response.json();
+          setSightings(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch sightings:", error);
+      }
+    };
+    fetchSightings();
+  }, []);
+
   return (
     <main className="bg-cream-100 text-lilac-900 font-display selection:bg-lilac-200 selection:text-lilac-900">
       {/* Hero */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <div className="space-y-6">
+            <RecentCatsCarousel />
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight">
               <span className="block">EVERY CAT,</span>
               <span className="block">EVERY CORNER.</span>
@@ -28,7 +58,7 @@ export default function Home() {
             <div className="aspect-[4/3] w-full rounded-[14px] overflow-hidden relative">
               {/* Live NYC Map */}
               <div className="absolute inset-0">
-                <MapboxMap sightings={[]} onMapClick={() => {}} />
+                <MapboxMap sightings={sightings} onMapClick={() => {}} />
               </div>
             </div>
           </div>

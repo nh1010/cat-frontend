@@ -16,6 +16,8 @@ interface Props {
   sightings: MBFeature[];
   onMapClick: (lat: number, lng: number) => void;
   flyTo?: { lat: number; lng: number } | null;
+  selectedId?: number | null;
+  onPinClick?: (id: number) => void;
 }
 
 const NYC_BOUNDS: [number, number, number, number] = [-74.25909, 40.477399, -73.700272, 40.917577];
@@ -52,11 +54,12 @@ const DEFAULT_MASK_GEOJSON: GeoJSON.FeatureCollection = {
   ]
 };
 
-export default function MapboxMap({ sightings, onMapClick, flyTo }: Props) {
+export default function MapboxMap({ sightings, onMapClick, flyTo, selectedId, onPinClick }: Props) {
   const mapRef = useRef<MapRef | null>(null);
   const [glSupported, setGlSupported] = useState<boolean | null>(null);
   const [popupId, setPopupId] = useState<number | null>(null);
   const [maskData, setMaskData] = useState<GeoJSON.FeatureCollection>(DEFAULT_MASK_GEOJSON);
+  const [zoom, setZoom] = useState(11);
 
   const token = import.meta.env.VITE_MAPBOX_TOKEN ?? "";
 
@@ -122,31 +125,69 @@ export default function MapboxMap({ sightings, onMapClick, flyTo }: Props) {
       });
   }, []);
 
-  const markers = useMemo(() => sightings.map((s) => (
-    <Marker key={s.id} longitude={s.lng} latitude={s.lat} anchor="bottom">
-      <button
-        type="button"
-        onClick={() => setPopupId(s.id)}
-        className="flex flex-col items-center -translate-y-1 hover:-translate-y-2 transition-transform cursor-pointer focus:outline-none"
-        aria-label={s.description || "Cat sighting"}
-      >
-        <img
-          src="/nyc-cat-logo.png"
-          alt="Cat marker"
-          className="h-8 w-8 rounded-full ring-2 ring-white shadow-lg"
-        />
-        <div className="w-0 h-0 border-l-4 border-r-4 border-t-8 border-l-transparent border-r-transparent border-t-pink-500 -mt-1" />
-      </button>
-      {popupId === s.id && (
-        <Popup longitude={s.lng} latitude={s.lat} onClose={() => setPopupId(null)} closeOnClick={false}>
-          <div className="text-sm">
-            <div className="font-semibold mb-1">{s.description}</div>
-            <div className="text-xs text-gray-600">{new Date(s.created_at).toLocaleString()}</div>
-          </div>
-        </Popup>
-      )}
-    </Marker>
-  )), [sightings, popupId]);
+  // Scale pins based on zoom level (zoom 8-18)
+  const pinSize = useMemo(() => {
+    const minZoom = 8;
+    const maxZoom = 18;
+    const minSize = 1.5; // rem at min zoom
+    const maxSize = 3.5; // rem at max zoom
+    const normalized = (zoom - minZoom) / (maxZoom - minZoom);
+    return minSize + (normalized * (maxSize - minSize));
+  }, [zoom]);
+
+  const markers = useMemo(() => sightings.map((s) => {
+      const isSelected = selectedId === s.id;
+      return (
+        <Marker key={s.id} longitude={s.lng} latitude={s.lat} anchor="bottom">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onPinClick) {
+                onPinClick(s.id);
+              } else {
+                setPopupId(s.id);
+              }
+            }}
+            className={`hover:scale-110 transition-transform cursor-pointer focus:outline-none ${isSelected ? 'scale-125' : ''}`}
+            aria-label={s.description || "Cat sighting"}
+            style={{ width: `${pinSize * 16}px`, height: `${pinSize * 20}px` }}
+          >
+            <svg
+              viewBox="0 0 24 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="drop-shadow-lg"
+            >
+              {/* Pin shape */}
+              <path
+                d="M12 0C5.373 0 0 5.373 0 12c0 8.5 12 20 12 20s12-11.5 12-20c0-6.627-5.373-12-12-12z"
+                fill={isSelected ? "#ec4899" : "#a78bfa"}
+              />
+              <circle cx="12" cy="12" r="10" fill="#faf5ff" />
+              
+              {/* Paw print image */}
+              <image
+                href="/paw.png"
+                x="3"
+                y="3"
+                width="18"
+                height="18"
+                preserveAspectRatio="xMidYMid meet"
+              />
+            </svg>
+          </button>
+          {popupId === s.id && !onPinClick && (
+            <Popup longitude={s.lng} latitude={s.lat} onClose={() => setPopupId(null)} closeOnClick={false}>
+              <div className="text-sm">
+                <div className="font-semibold mb-1">{s.description}</div>
+                <div className="text-xs text-gray-600">{new Date(s.created_at).toLocaleString()}</div>
+              </div>
+            </Popup>
+          )}
+        </Marker>
+      );
+    }), [sightings, popupId, pinSize, selectedId, onPinClick]);
 
   // Respond to flyTo prop changes
   useEffect(() => {
@@ -189,8 +230,12 @@ export default function MapboxMap({ sightings, onMapClick, flyTo }: Props) {
       maxBounds={[[-74.25909, 40.477399], [-73.700272, 40.917577]]}
       onLoad={() => {
         const m = mapRef.current?.getMap();
-        if (m) m.fitBounds([[-74.25909, 40.477399], [-73.700272, 40.917577]], { padding: 20, duration: 0 });
+        if (m) {
+          m.fitBounds([[-74.25909, 40.477399], [-73.700272, 40.917577]], { padding: 20, duration: 0 });
+          setZoom(m.getZoom());
+        }
       }}
+      onZoom={(e) => setZoom(e.viewState.zoom)}
       onClick={handleClick}
     >
       {/* Black-out mask outside NYC */}

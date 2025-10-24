@@ -1,8 +1,18 @@
 "use client";
 
 import MapboxMap from "@/components/MapboxMap";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/modal";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
+
+interface CatSighting {
+  id: number;
+  lat: number;
+  lng: number;
+  description: string;
+  created_at: string;
+}
 
 export default function MapPage() {
   const [flyTo, setFlyTo] = useState<{ lat: number; lng: number } | null>(null);
@@ -13,8 +23,23 @@ export default function MapPage() {
   const [spottedDate, setSpottedDate] = useState<string>("");
   const [spottedTime, setSpottedTime] = useState<string>("");
   const [addr, setAddr] = useState("");
+  const [sightings, setSightings] = useState<CatSighting[]>([]);
 
-  console.log("Map page state - catName:", catName);
+  // Fetch sightings on mount
+  useEffect(() => {
+    const fetchSightings = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/cats`);
+        if (response.ok) {
+          const data = await response.json();
+          setSightings(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch sightings:", err);
+      }
+    };
+    fetchSightings();
+  }, []);
 
   const canSubmit = useMemo(() => !!pending && desc.trim().length > 0, [pending, desc]);
 
@@ -63,21 +88,23 @@ export default function MapPage() {
       image_url: image_url ?? null,
       spotted_at,
     };
-    console.log("Submitting sighting payload:", body);
-    console.log("State before submit - catName:", catName);
 
-    await fetch("http://localhost:5050/api/cats", {
+    const res = await fetch("http://localhost:5050/api/cats", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+    if (res.ok) {
+      const newSighting = await res.json();
+      setSightings([newSighting, ...sightings]);
+    }
     setPending(null);
     setDesc("");
     setCatName("");
     setImageFile(null);
     setSpottedDate("");
     setSpottedTime("");
-  }, [pending, desc, addr, catName, imageFile, spottedDate, spottedTime]);
+  }, [pending, desc, addr, catName, imageFile, spottedDate, spottedTime, sightings]);
 
   return (
     <main className="bg-cream-100">
@@ -93,7 +120,7 @@ export default function MapPage() {
           </div>
           <div className="h-[calc(100vh-10rem)] w-full rounded-[14px] overflow-hidden relative">
             <div className="absolute inset-0">
-              <MapboxMap sightings={[]} onMapClick={onMapClick} flyTo={flyTo} />
+              <MapboxMap sightings={sightings} onMapClick={onMapClick} flyTo={flyTo} />
             </div>
           </div>
         </div>
@@ -109,10 +136,7 @@ export default function MapPage() {
               <label className="block text-xs text-lilac-700 mb-1">Cat name (optional)</label>
               <input 
                 value={catName} 
-                onChange={(e) => {
-                  console.log("Cat name input changed to:", e.target.value);
-                  setCatName(e.target.value);
-                }} 
+                onChange={(e) => setCatName(e.target.value)} 
                 className="w-full rounded-md border border-lilac-300 px-3 py-2 bg-white text-lilac-900" 
               />
             </div>

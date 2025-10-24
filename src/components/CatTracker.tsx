@@ -113,7 +113,6 @@ export default function CatTracker() {
         spotted_at: newSighting.spottedAt || null,
       };
 
-      console.log("Submitting sighting payload (CatTracker):", payload);
       const response = await fetch(`${API_BASE_URL}/api/cats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -249,10 +248,7 @@ export default function CatTracker() {
               placeholder="e.g., Miss Matcha"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={newSighting.cat_name}
-              onChange={(e) => {
-                console.log("Cat name input changed to:", e.target.value);
-                setNewSighting({ ...newSighting, cat_name: e.target.value });
-              }}
+              onChange={(e) => setNewSighting({ ...newSighting, cat_name: e.target.value })}
             />
           </div>
 

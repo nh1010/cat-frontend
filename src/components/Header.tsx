@@ -6,10 +6,9 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const navItems = [
   { name: "Map", href: "/map" },
+  { name: "Sightings", href: "/sightings" },
   { name: "Reports", href: "/reports" },
-  { name: "Sightings", href: "/#sightings" },
-  { name: "About", href: "/#about" },
-  { name: "Stats", href: "/#stats" },
+  { name: "About", href: "/about" },
 ];
 
 export default function Header() {

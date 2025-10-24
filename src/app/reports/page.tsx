@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
+
 type Summary = {
   total: number;
   by_source: Record<string, number>;
@@ -36,7 +38,7 @@ export default function ReportsPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:5050/api/reports/summary?${qs}`);
+        const res = await fetch(`${API_BASE_URL}/api/reports/summary?${qs}`);
         if (!res.ok) throw new Error(`Failed to fetch summary: ${res.status}`);
         const data = (await res.json()) as Summary;
         if (active) setSummary(data);
@@ -52,7 +54,7 @@ export default function ReportsPage() {
   }, [qs]);
 
   const handleExport = async () => {
-    const res = await fetch(`http://localhost:5050/api/reports/export?${qs}`);
+    const res = await fetch(`${API_BASE_URL}/api/reports/export?${qs}`);
     if (!res.ok) return;
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
